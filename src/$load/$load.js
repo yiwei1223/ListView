@@ -1,6 +1,7 @@
 /**!
  * $upload.js 1.0.0 (c) 2016 Yi wei - MIT license
  * @desc 这是一个下拉、上拉加载库.依赖于zepto.js
+ *       暂时依赖于deferred.js & callback.js 主要实现promise (后续会使用原生实现剔除这两个依赖)
  *       适用于移动端H5页面
  *
  */
@@ -56,7 +57,7 @@
 
       that.listen($dom, 'touchmove', function (ev) {
         var touch = ev.touches[0] || ev.changedTouches[0];
-        if ((touch.clientY - that.DLDATA.startY < 0) || $('body').get(0).scrollTop > 0) {
+        if ((touch.clientY - that.DLDATA.startY < that.DLDATA.threshold.download) || $('body').get(0).scrollTop > 0) {
           // 向下滑动不做处理
           return -1;
         }
@@ -67,18 +68,20 @@
       that.listen($dom, 'touchend', function (ev) {
         var touch = ev.touches[0] || ev.changedTouches[0],
             load_warp = $('#load_download_warp');
-        if ((touch.clientY - that.DLDATA.startY <= 0) || $('body').get(0).scrollTop > 0) {
+        if ((touch.clientY - that.DLDATA.startY <= that.DLDATA.threshold.download) || $('body').get(0).scrollTop > 0) {
           return -1;
         }
         // 放手后修改提示内容
         load_warp.html(that.DLDATA.LOAD).css(that.DLDATA.DLCSS.load);
         that.DLDATA.translateY = 0;
         that.transformDLDOM($dom, '.3s');
-        conf.request && conf.request(function () {
-          load_warp.html(that.DLDATA.DROP).css(that.DLDATA.DLCSS.drop);
-          that.DLDATA.translateY = - that.DLDATA.HEIGHT;
-          load_warp.html(that.DLDATA.DROP);
-          that.transformDLDOM($dom, '.3s');
+        conf.cb && that.promise(conf.cb).then(function () {
+          setTimeout(function () {
+            load_warp.html(that.DLDATA.DROP).css(that.DLDATA.DLCSS.drop);
+            that.DLDATA.translateY = - that.DLDATA.HEIGHT;
+            load_warp.html(that.DLDATA.DROP);
+            that.transformDLDOM($dom, '.3s');
+          }, 3000);
         });
       });
     },
@@ -90,15 +93,17 @@
      */
     initDLDOM: function ($dom, conf) {
       // 初始化下拉加载相关css
-      $.extend(this.DLDATA.DLCSS.drop, this.DLDATA.DLCSS.defaultCSS, conf.content.drop.warpCSS);
-      $.extend(this.DLDATA.DLCSS.load, this.DLDATA.DLCSS.defaultCSS, conf.content.load.warpCSS);
+      $.extend(this.DLDATA.DLCSS.drop, this.DLDATA.DLCSS.defaultCSS, conf.config.drop.warpCSS);
+      $.extend(this.DLDATA.DLCSS.load, this.DLDATA.DLCSS.defaultCSS, conf.config.load.warpCSS);
 
       // 初始化滑动阀值
-      conf.threshold && $.extend(this.DLDATA.threshold, conf.threshold);
+      conf.config.threshold && $.extend(this.DLDATA.threshold, {
+        download: conf.config.threshold
+      });
 
       // 初始化下拉加载提示DOM 结构
-      this.DLDATA.DROP = conf.content.drop && conf.content.drop.innerHTML != '' ? conf.content.drop.innerHTML : '松手后加载数据!';
-      this.DLDATA.LOAD = conf.content.load && conf.content.load.innerHTML != '' ? conf.content.load.innerHTML : '正在加载数据!';
+      this.DLDATA.DROP = conf.config.drop && conf.config.drop.innerHTML != '' ? conf.config.drop.innerHTML : '松手后加载数据!';
+      this.DLDATA.LOAD = conf.config.load && conf.config.load.innerHTML != '' ? conf.config.load.innerHTML : '正在加载数据!';
       this.DLDATA.DROP = "<div id='load_download_warp'>" + this.DLDATA.DROP + "</div>";
 
       // 初始化DOM
@@ -124,6 +129,18 @@
         'transform': 'translate3d(0, ' +  this.DLDATA.translateY + 'px, 0) scale(1)',
         '-webkit-transform': 'translate3d(0, ' +  this.DLDATA.translateY + 'px, 0) scale(1)'
       });
+    },
+
+    /**
+     * @desc Promise实现
+     * @param cb callback
+     * @returns {Object} Promise
+     */
+    promise: function (cb) {
+      var defer = $.Deferred();
+      cb && cb();
+      defer.resolve();
+      return defer.promise();
     }
   };
 
@@ -182,14 +199,11 @@
    *       注意： 调用此方法的dom结构必须为列表的父节点（即：<ul/>外围必须包一层）
    * @param  {[object]} conf [参数配置]
    *         {
-   *         		request: function () { // 下拉松手后执行，主要是请求数据，添加数据到dom
+   *         		cb: function () { // 下拉松手后执行，主要是请求数据，添加数据到dom
    *
    *         		},
-   *         	    threshold: { // 滑动阀值，即滑动多大距离触发加载 [可选参数，默认为0]
-   *         	      download: 0, //下拉加载阀值（为0时代表一到顶端就触发加载）
-   *         	      upload: 0 // 上拉加载阀值
-   *         	    }
-   *         		content: {
+   *         		config: {
+   *         	        threshold: 0, //滑动阀值，即滑动多大距离触发加载 [可选参数，默认为0]
    *         			drop: { // 手指下拉列表不松手时展示的提示［可选参数］
    *         				innerHTML: '' //可以为dom结构或纯文字,
    *         			    warpCSS: {}//包裹文字的div的css样式对象 [可选]
