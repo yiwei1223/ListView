@@ -20,6 +20,61 @@
         font-size: 20px;
         border-bottom: 1px solid #ccc;
       }
+
+      .load-warp {
+        position: absolute;
+        width: 100%;
+        top: 50%;
+        transform: translate3d(0, -50%, 0);
+        -webkit-transform: translate3d(0, -50%, 0);
+      }
+
+      .loading {
+        width: 20px;
+        margin: 0 auto;
+        position: relative;
+        height: 20px;
+        border-radius: 50%;
+        border: 2px solid #fd8da0;
+        border-left-color: rgba(253,141,160, .5);
+        animation: run 1s linear infinite;
+        -webkit-animation: run 1s linear infinite;
+      }
+
+      .loading-desc {
+        color: #fd8da0;
+        font-size: 1.037037rem;
+        margin: 3.7% 0 0;
+        text-align: center;
+      }
+
+      @keyframes run {
+        0% {
+          transform: rotate(0deg);
+        }
+
+        50% {
+          transform: rotate(180deg);
+        }
+
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      @-webkit-keyframes run {
+        0% {
+          transform: rotate(0deg);
+        }
+
+        50% {
+          transform: rotate(180deg);
+        }
+
+        100% {
+          transform: rotate(360deg);
+        }
+      }
     </style>
   </head>
   <body>
@@ -50,7 +105,7 @@
       </div>
     </div>
   </body>
-  <script src="http://static.g.mi.com/pages/static/zepto.min.js"></script>
+  <script src="../lib/zepto.min.js"></script>
   <script src="../../src/$load/$load.js"></script>
   <script src="index.js"></script>
 </html>

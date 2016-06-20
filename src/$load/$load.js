@@ -13,10 +13,18 @@
     DLDATA: {
       // 下拉加载默认样式
       DLCSS: {
-        'text-align': 'center',
-        'padding': '7% 0',
-        'background': '#948F8F',
-        'color': '#fff'
+        defaultCSS: {
+          'text-align': 'center',
+          'padding': '7% 0',
+          'background': '#948F8F',
+          'color': '#fff'
+        },
+        drop: {},
+        load: {}
+      },
+      threshold: {
+        download: 0,
+        upload: 0
       },
       DROP: '',
       LOAD: '',
@@ -52,22 +60,24 @@
           // 向下滑动不做处理
           return -1;
         }
-        that.DLDATA.translateY = (-that.DLDATA.HEIGHT + touch.clientY - that.DLDATA.startY)/2;
+        that.DLDATA.translateY = (-that.DLDATA.HEIGHT + touch.clientY - that.DLDATA.startY)/2.5;
         that.transformDLDOM($dom);
       });
 
       that.listen($dom, 'touchend', function (ev) {
-        var touch = ev.touches[0] || ev.changedTouches[0];
+        var touch = ev.touches[0] || ev.changedTouches[0],
+            load_warp = $('#load_download_warp');
         if ((touch.clientY - that.DLDATA.startY <= 0) || $('body').get(0).scrollTop > 0) {
           return -1;
         }
+        // 放手后修改提示内容
+        load_warp.html(that.DLDATA.LOAD).css(that.DLDATA.DLCSS.load);
         that.DLDATA.translateY = 0;
         that.transformDLDOM($dom, '.3s');
-        // 放手后修改提示内容
-        $('#load_download_warp').html(that.DLDATA.LOAD);
         conf.request && conf.request(function () {
+          load_warp.html(that.DLDATA.DROP).css(that.DLDATA.DLCSS.drop);
           that.DLDATA.translateY = - that.DLDATA.HEIGHT;
-          $('#load_download_warp').html(that.DLDATA.DROP);
+          load_warp.html(that.DLDATA.DROP);
           that.transformDLDOM($dom, '.3s');
         });
       });
@@ -79,10 +89,20 @@
      * @param  {[Object]} conf [配置参数对象]
      */
     initDLDOM: function ($dom, conf) {
+      // 初始化下拉加载相关css
+      $.extend(this.DLDATA.DLCSS.drop, this.DLDATA.DLCSS.defaultCSS, conf.content.drop.warpCSS);
+      $.extend(this.DLDATA.DLCSS.load, this.DLDATA.DLCSS.defaultCSS, conf.content.load.warpCSS);
+
+      // 初始化滑动阀值
+      conf.threshold && $.extend(this.DLDATA.threshold, conf.threshold);
+
+      // 初始化下拉加载提示DOM 结构
       this.DLDATA.DROP = conf.content.drop && conf.content.drop.innerHTML != '' ? conf.content.drop.innerHTML : '松手后加载数据!';
       this.DLDATA.LOAD = conf.content.load && conf.content.load.innerHTML != '' ? conf.content.load.innerHTML : '正在加载数据!';
       this.DLDATA.DROP = "<div id='load_download_warp'>" + this.DLDATA.DROP + "</div>";
-      $(this.DLDATA.DROP).css(this.DLDATA.DLCSS).prependTo($($dom));
+
+      // 初始化DOM
+      $(this.DLDATA.DROP).css(this.DLDATA.DLCSS.drop).prependTo($($dom));
       // 计算拉加载提示DOM高度
       this.DLDATA.HEIGHT = $('#load_download_warp').height();
       this.DLDATA.translateY = -this.DLDATA.HEIGHT;
@@ -165,12 +185,18 @@
    *         		request: function () { // 下拉松手后执行，主要是请求数据，添加数据到dom
    *
    *         		},
+   *         	    threshold: { // 滑动阀值，即滑动多大距离触发加载 [可选参数，默认为0]
+   *         	      download: 0, //下拉加载阀值（为0时代表一到顶端就触发加载）
+   *         	      upload: 0 // 上拉加载阀值
+   *         	    }
    *         		content: {
    *         			drop: { // 手指下拉列表不松手时展示的提示［可选参数］
-   *         				innerHTML: '' //可以为dom结构或纯文字
+   *         				innerHTML: '' //可以为dom结构或纯文字,
+   *         			    warpCSS: {}//包裹文字的div的css样式对象 [可选]
    *         			},
    *         			load: { // 手指下拉列表松手时展示的提示［可选参数］
-   *         				innerHTML: '' //可以为dom结构或纯文字
+   *         				innerHTML: '' //可以为dom结构或纯文字,
+   *         			    warpCSS: {}//包裹文字的div的css样式对象 [可选]
    *         			}
    *         		}
    *         }
