@@ -3,14 +3,16 @@ $(function () {
   $('.list_container').download({
     cb: function (cb) {
       setTimeout(function () {
-        for (var i=0; i<2; i++) {
+        for (var i=0; i < 2; i++) {
           $('<li>li_' + i +'</li>').prependTo($('.list'));
         }
-      }, 3000);
+        // 这是从库中传回的回调, 执行它的处理加载loading
+        cb && cb();
+      }, 5000);
     },
     config: {
-      threshold: 100,
-
+      threshold: 0,
+      warp: $('body'),
       drop: {
         innerHTML: '松手后加载数据'
       },

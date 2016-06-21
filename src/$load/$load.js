@@ -49,15 +49,15 @@
      * @param  {[Object]} conf [参数对象]
      */
     listenDL: function ($dom, conf) {
-      var that = this;
+      var that = this,
+          warp = $(conf.config.warp).get(0);
       that.listen($dom, 'touchstart', function (ev) {
         var touch = ev.touches[0] || ev.changedTouches[0];
         that.DLDATA.startY = touch.clientY;
       });
-
       that.listen($dom, 'touchmove', function (ev) {
         var touch = ev.touches[0] || ev.changedTouches[0];
-        if ((touch.clientY - that.DLDATA.startY < that.DLDATA.threshold.download) || $('body').get(0).scrollTop > 0) {
+        if ((touch.clientY - that.DLDATA.startY < that.DLDATA.threshold.download) || warp.scrollTop > 0) {
           // 向下滑动不做处理
           return -1;
         }
@@ -68,20 +68,18 @@
       that.listen($dom, 'touchend', function (ev) {
         var touch = ev.touches[0] || ev.changedTouches[0],
             load_warp = $('#load_download_warp');
-        if ((touch.clientY - that.DLDATA.startY <= that.DLDATA.threshold.download) || $('body').get(0).scrollTop > 0) {
+        if ((touch.clientY - that.DLDATA.startY <= that.DLDATA.threshold.download) || warp.scrollTop > 0) {
           return -1;
         }
         // 放手后修改提示内容
         load_warp.html(that.DLDATA.LOAD).css(that.DLDATA.DLCSS.load);
         that.DLDATA.translateY = 0;
         that.transformDLDOM($dom, '.3s');
-        conf.cb && that.promise(conf.cb).then(function () {
-          setTimeout(function () {
-            load_warp.html(that.DLDATA.DROP).css(that.DLDATA.DLCSS.drop);
-            that.DLDATA.translateY = - that.DLDATA.HEIGHT;
-            load_warp.html(that.DLDATA.DROP);
-            that.transformDLDOM($dom, '.3s');
-          }, 3000);
+        conf.cb && conf.cb(function () {
+          load_warp.html(that.DLDATA.DROP).css(that.DLDATA.DLCSS.drop);
+          that.DLDATA.translateY = - that.DLDATA.HEIGHT;
+          load_warp.html(that.DLDATA.DROP);
+          that.transformDLDOM($dom, '.3s');
         });
       });
     },
@@ -129,18 +127,6 @@
         'transform': 'translate3d(0, ' +  this.DLDATA.translateY + 'px, 0) scale(1)',
         '-webkit-transform': 'translate3d(0, ' +  this.DLDATA.translateY + 'px, 0) scale(1)'
       });
-    },
-
-    /**
-     * @desc Promise实现
-     * @param cb callback
-     * @returns {Object} Promise
-     */
-    promise: function (cb) {
-      var defer = $.Deferred();
-      cb && cb();
-      defer.resolve();
-      return defer.promise();
     }
   };
 
@@ -204,6 +190,7 @@
    *         		},
    *         		config: {
    *         	        threshold: 0, //滑动阀值，即滑动多大距离触发加载 [可选参数，默认为0]
+   *         	        warp: $(''), // 滑动容器，用于计算scrollTop值
    *         			drop: { // 手指下拉列表不松手时展示的提示［可选参数］
    *         				innerHTML: '' //可以为dom结构或纯文字,
    *         			    warpCSS: {}//包裹文字的div的css样式对象 [可选]
