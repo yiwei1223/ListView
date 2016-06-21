@@ -11,7 +11,7 @@ $(function () {
       }, 5000);
     },
     config: {
-      threshold: 0,
+      threshold: 100,
       warp: $('body'),
       drop: {
         innerHTML: '松手后加载数据'

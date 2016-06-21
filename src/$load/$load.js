@@ -61,8 +61,11 @@
           // 向下滑动不做处理
           return -1;
         }
-        that.DLDATA.translateY = (-that.DLDATA.HEIGHT + touch.clientY - that.DLDATA.startY)/2.5;
+        that.DLDATA.translateY = (-that.DLDATA.HEIGHT + touch.clientY - that.DLDATA.startY)/2;
         that.transformDLDOM($dom);
+
+        //解决安卓上touchmove只触发1次或者2次的bug
+        return false;
       });
 
       that.listen($dom, 'touchend', function (ev) {
@@ -155,9 +158,10 @@
      */
     init: function () {
       if (!this.LV.find('ul').length) {
-        console.error('dom结构错误，结构必须为：<tag><ul></ul></tag>');
+        console.error('dom结构错误，结构必须为：<element><ul></ul></element>');
         return -1;
       }
+
       switch (this.type) {
         case 'download':
           this.download && this.download();
