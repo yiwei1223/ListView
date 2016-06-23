@@ -23,7 +23,7 @@
         load: {}
       },
       threshold: {
-        download: 0,
+        pullrefresh: 0,
         upload: 0
       },
       DROP: '',
@@ -56,7 +56,7 @@
       });
       that.listen($dom, 'touchmove', function (ev) {
         var touch = ev.touches[0] || ev.changedTouches[0];
-        if ((touch.clientY - that.DLDATA.startY < that.DLDATA.threshold.download) || warp.scrollTop > 0) {
+        if ((touch.clientY - that.DLDATA.startY < that.DLDATA.threshold.pullrefresh) || warp.scrollTop > 0) {
           // 向下滑动不做处理
           return -1;
         }
@@ -69,8 +69,8 @@
 
       that.listen($dom, 'touchend', function (ev) {
         var touch = ev.touches[0] || ev.changedTouches[0],
-            load_warp = $('#load_download_warp');
-        if ((touch.clientY - that.DLDATA.startY <= that.DLDATA.threshold.download) || warp.scrollTop > 0) {
+            load_warp = $('#load_pullrefresh_warp');
+        if ((touch.clientY - that.DLDATA.startY <= that.DLDATA.threshold.pullrefresh) || warp.scrollTop > 0) {
           return -1;
         }
         // 放手后修改提示内容
@@ -98,18 +98,18 @@
 
       // 初始化滑动阀值
       conf.config.threshold && $.extend(this.DLDATA.threshold, {
-        download: conf.config.threshold
+        pullrefresh: conf.config.threshold
       });
 
       // 初始化下拉加载提示DOM 结构
       this.DLDATA.DROP = conf.config.drop && conf.config.drop.innerHTML != '' ? conf.config.drop.innerHTML : '松手后加载数据!';
       this.DLDATA.LOAD = conf.config.load && conf.config.load.innerHTML != '' ? conf.config.load.innerHTML : '正在加载数据!';
-      this.DLDATA.DROP = "<div id='load_download_warp'>" + this.DLDATA.DROP + "</div>";
+      this.DLDATA.DROP = "<div id='load_pullrefresh_warp'>" + this.DLDATA.DROP + "</div>";
 
       // 初始化DOM
       $(this.DLDATA.DROP).css(this.DLDATA.DLCSS.drop).prependTo($($dom));
       // 计算拉加载提示DOM高度
-      this.DLDATA.HEIGHT = $('#load_download_warp').height();
+      this.DLDATA.HEIGHT = $('#load_pullrefresh_warp').height();
       this.DLDATA.translateY = -this.DLDATA.HEIGHT;
       // 初始化隐藏加载提示DOM
       this.transformDLDOM($dom);
@@ -135,7 +135,7 @@
 
   /**
    * @desc Load Object
-   * @param  {[string]} type     [加载方式 download || upload]
+   * @param  {[string]} type     [加载方式 pullRefresh || upload]
    * @param  {[Zepto]} LV  [加载列表：$('ul')]
    * @param  {[object]} conf     [初始化参数对象]
    */
@@ -185,7 +185,7 @@
      * @desc 下拉加载
      */
     upload: function () {
-      
+
     }
   };
 
