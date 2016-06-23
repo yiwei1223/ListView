@@ -1,7 +1,6 @@
 /**!
  * $upload.js 1.0.0 (c) 2016 Yi wei - MIT license
  * @desc 这是一个下拉、上拉加载库.依赖于zepto.js
- *       暂时依赖于deferred.js & callback.js 主要实现promise (后续会使用原生实现剔除这两个依赖)
  *       适用于移动端H5页面
  *
  */
@@ -163,8 +162,8 @@
       }
 
       switch (this.type) {
-        case 'download':
-          this.download && this.download();
+        case 'pullrefresh':
+          this.pullRefresh && this.pullRefresh();
           break;
         case 'upload':
           this.upload && this.upload();
@@ -173,19 +172,26 @@
     },
 
     /**
-     * @desc 下拉加载
+     * @desc 上拉刷新
      */
-    download: function () {
+    pullRefresh: function () {
       // 初始化DOM结构
       _Util.initDLDOM && _Util.initDLDOM(this.LV, this.conf);
       // 为列表添加下拉事件监听
       _Util.listenDL && _Util.listenDL(this.LV, this.conf);
+    },
+
+    /**
+     * @desc 下拉加载
+     */
+    upload: function () {
+      
     }
   };
 
 
   /**
-   * @desc 上拉加载，扩展为Zepto方法
+   * @desc 下拉刷新，扩展为Zepto方法
    *       注意： 调用此方法的dom结构必须为列表的父节点（即：<ul/>外围必须包一层）
    * @param  {[object]} conf [参数配置]
    *         {
@@ -206,10 +212,21 @@
    *         		}
    *         }
    */
-  $.fn.download = function (conf) {
+  $.fn.pullRefresh = function (conf) {
     var me = $(this);
     return (function () {
-      (new Load('download', me, conf)).init();
+      (new Load('pullrefresh', me, conf)).init();
+    })();
+  };
+
+  /**
+   * @desc 上拉加载，扩展为Zepto方法
+   * @param conf 同下拉刷新方法一致
+   */
+  $.fn.upload = function (conf) {
+    var me = $(this);
+    return (function () {
+      (new Load('upload', me, conf)).init();
     })();
   };
 })(window, window.$ || Zepto);
